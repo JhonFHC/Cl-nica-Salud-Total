@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClinicaSoft — Tests Unitarios</title>
+  <style>
+    body { font-family: 'Consolas', monospace; background: #0f172a; color: #e2e8f0; padding: 40px; margin: 0; }
+    h1 { font-size: 1.5rem; margin-bottom: 8px; }
+    .sub { color: #64748b; margin-bottom: 24px; }
+    #output { white-space: pre-wrap; font-size: 0.88rem; line-height: 1.6; }
+    .btn { background:#2563eb; color:#fff; border:none; padding:10px 24px; border-radius:6px; font-size:0.95rem; cursor:pointer; margin-bottom:20px; }
+    .btn:hover { background:#1d4ed8; }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .summary { padding:16px 20px; border-radius:8px; margin-top:16px; font-weight:600; }
+    .summary.pass { background:#065f46; color:#a7f3d0; }
+    .summary.fail { background:#7f1d1d; color:#fca5a5; }
+  </style>
+</head>
+<body>
+  <h1>🧪 ClinicaSoft — Tests Unitarios</h1>
+  <p class="sub">Validación de DNI duplicado, registro de pacientes y formato de campos</p>
+  <button class="btn" id="runBtn" onclick="ejecutarTests()">▶ Ejecutar Tests</button>
+  <div id="output">Presione "Ejecutar Tests" para iniciar...</div>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/validators.js"></script>
+  <script src="../js/paciente-service.js"></script>
+  <script src="test-pacientes.js"></script>
+  <script>
+    async function ejecutarTests() {
+      const btn = document.getElementById('runBtn');
+      const out = document.getElementById('output');
+      btn.disabled = true;
+      btn.textContent = '⏳ Ejecutando...';
+      const result = await TestsPacientes.runAll();
+      out.textContent = result.output;
+      const summary = document.createElement('div');
+      summary.className = `summary ${result.failed === 0 ? 'pass' : 'fail'}`;
+      summary.textContent = result.failed === 0
+        ? `✅ ${result.passed} tests pasaron correctamente.`
+        : `❌ ${result.failed} test(s) fallaron.`;
+      out.parentNode.appendChild(summary);
+      btn.textContent = '▶ Ejecutar Tests';
+      btn.disabled = false;
+    }
+  </script>
+</body>
+</html>

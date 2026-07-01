@@ -96,6 +96,7 @@ const App = (() => {
       <div class="app-layout">
         <aside class="sidebar" id="sidebar">
           <div class="sidebar-brand">
+            <button class="sidebar-close-btn" id="sidebarClose" aria-label="Cerrar menú">&times;</button>
             <img src="img/logo-clinica.png" alt="ClinicaSoft" class="sidebar-brand-img">
             <div class="sidebar-brand-text">
               <h2>ClinicaSoft</h2>
@@ -125,10 +126,14 @@ const App = (() => {
             </button>
           </div>
         </aside>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
         <main class="main-content" id="mainContent">
           <div class="main-header">
-            <h1 id="moduleTitle">${currentModule}</h1>
-            <p id="moduleSubtitle"></p>
+            <button class="btn btn-icon sidebar-hamburger" id="sidebarToggle" aria-label="Abrir menú">${Components.icon('list')}</button>
+            <div class="main-header-text">
+              <h1 id="moduleTitle">${currentModule}</h1>
+              <p id="moduleSubtitle"></p>
+            </div>
           </div>
           <div class="module-content" id="moduleContent"></div>
         </main>
@@ -162,8 +167,20 @@ const App = (() => {
         currentModule = mod;
         document.getElementById('moduleTitle').textContent = mod;
         renderModule(mod);
+        closeSidebar();
       });
     });
+    document.getElementById('sidebarToggle')?.addEventListener('click', toggleSidebar);
+    document.getElementById('sidebarClose')?.addEventListener('click', closeSidebar);
+    document.getElementById('sidebarOverlay')?.addEventListener('click', closeSidebar);
+  }
+  function toggleSidebar() {
+    document.getElementById('sidebar')?.classList.toggle('open');
+    document.getElementById('app')?.classList.toggle('sidebar-open');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('app')?.classList.remove('sidebar-open');
   }
 
   function bindLogoutEvent() {
@@ -485,6 +502,7 @@ const App = (() => {
       </div>
     `;
     bindPacienteForm();
+    bindPostmanIntegration();
   }
 
   function bindPacienteForm() {
@@ -773,11 +791,31 @@ const App = (() => {
     refreshPatientSelectors();
   }
 
+  /* === Postman mock integration: envía datos del formulario al endpoint simulado === */
+  function bindPostmanIntegration() {
+    const formulario = document.getElementById('formRegistrarPaciente');
+    if (!formulario) return;
+
+    formulario.addEventListener('submit', (evento) => {
+      const datosPaciente = {
+        nombres: document.getElementById('pNombres')?.value || '',
+        apellidos: document.getElementById('pApellidos')?.value || '',
+        dni: document.getElementById('pDni')?.value || '',
+        telefono: document.getElementById('pTelefono')?.value || '',
+        correo: document.getElementById('pEmail')?.value || '',
+        fecha_nacimiento: document.getElementById('pFechaNac')?.value || '',
+        seguro: document.getElementById('pSeguro')?.value || '',
+        direccion: document.getElementById('pDireccion')?.value || ''
+      };
+      PacienteService.registrarEnPostman(datosPaciente);
+    });
+  }
+
   function renderCitasAgenda() {
     const container = document.getElementById('citasAgenda');
     const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
     const horas = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
-    let html = `<div class="card"><div class="agenda-grid">`;
+    let html = `<div class="card"><div class="agenda-wrapper"><div class="agenda-grid">`;
     html += `<div class="agenda-header">Hora</div>`;
     dias.forEach(d => { html += `<div class="agenda-header">${d}</div>`; });
     const diaIndex = { 'Lunes': 1, 'Martes': 2, 'Miércoles': 3, 'Jueves': 4, 'Viernes': 5 };
@@ -799,7 +837,7 @@ const App = (() => {
         }
       }
     });
-    html += `</div></div>`;
+    html += `</div></div></div>`;
     container.innerHTML = html;
   }
 

@@ -1,3 +1,5 @@
+const POSTMAN_MOCK_URL = 'https://70765311-dec6-4f8d-983d-fdf68415e39d.mock.pstmn.io/registrar-paciente';
+
 const PacienteService = (() => {
   function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -5,6 +7,22 @@ const PacienteService = (() => {
 
   function buscarPorDni(dni) {
     return ClinicaData.pacientes.find(p => p.dni === dni) || null;
+  }
+
+  async function registrarEnPostman(datosPaciente) {
+    try {
+      const respuesta = await fetch(POSTMAN_MOCK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosPaciente)
+      });
+      const resultado = await respuesta.json();
+      console.log('Respuesta de Postman:', resultado);
+      return resultado;
+    } catch (error) {
+      console.error('Error en la simulación Postman:', error);
+      return null;
+    }
   }
 
   async function registrar(data) {
@@ -69,6 +87,18 @@ const PacienteService = (() => {
     }
 
     ClinicaData.pacientes.push(nuevoPaciente);
+
+    registrarEnPostman({
+      dni: nuevoPaciente.dni,
+      nombres: nuevoPaciente.nombre,
+      apellidos: nuevoPaciente.apellido,
+      fecha_nacimiento: nuevoPaciente.fechaNacimiento,
+      telefono: nuevoPaciente.telefono,
+      correo: nuevoPaciente.email,
+      direccion: nuevoPaciente.direccion,
+      seguro: nuevoPaciente.seguro
+    });
+
     return { success: true, status: 201, paciente: nuevoPaciente };
   }
 
@@ -95,5 +125,5 @@ const PacienteService = (() => {
     return { success: true, status: 200, paciente: p };
   }
 
-  return { registrar, getAll, getById, actualizar, buscarPorDni };
+  return { registrar, getAll, getById, actualizar, buscarPorDni, registrarEnPostman };
 })();

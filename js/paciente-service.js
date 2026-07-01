@@ -62,24 +62,39 @@ const PacienteService = (() => {
 
     if (SupabaseService.isAvailable()) {
       try {
-        const sb = SupabaseService.getClient();
-        const { data: insertData, error } = await sb.from('pacientes').insert({
+        const url = SUPABASE_URL + '/rest/v1/paciente';
+        const anonKey = SUPABASE_ANON_KEY;
+        const body = {
           dni: nuevoPaciente.dni,
-          nombres: nuevoPaciente.nombre,
-          apellidos: nuevoPaciente.apellido,
-          fecha_nacimiento: nuevoPaciente.fechaNacimiento || null,
+          nombre: nuevoPaciente.nombre,
+          apellido: nuevoPaciente.apellido,
+          fecha_nac: nuevoPaciente.fechaNacimiento || null,
+          genero: data.genero || null,
           telefono: nuevoPaciente.telefono || null,
-          correo: nuevoPaciente.email || null,
-          direccion: nuevoPaciente.direccion || null,
-          seguro: nuevoPaciente.seguro
-        }).select().single();
-        if (error) {
-          if (error.code === '23505') {
+          email: nuevoPaciente.email || null,
+          direccion: nuevoPaciente.direccion || null
+        };
+        const response = await fetch(url + '?select=*', {
+          method: 'POST',
+          headers: {
+            apikey: anonKey,
+            Authorization: 'Bearer ' + anonKey,
+            'Content-Type': 'application/json',
+            Prefer: 'return=representation'
+          },
+          body: JSON.stringify(body)
+        });
+        if (!response.ok) {
+          const errText = await response.text();
+          if (response.status === 409) {
             return { success: false, status: 409, error: `El DNI ${data.dni} ya existe en la base de datos.` };
           }
-          console.warn('Supabase insert error, usando fallback local:', error.message);
-        } else if (insertData) {
-          nuevoPaciente.id = insertData.id;
+          console.warn('Supabase REST insert error (' + response.status + '), usando fallback local:', errText);
+        } else {
+          const result = await response.json();
+          if (Array.isArray(result) && result.length > 0) {
+            nuevoPaciente.id = result[0].id;
+          }
         }
       } catch (err) {
         console.warn('Supabase error, usando fallback local:', err.message);
@@ -88,15 +103,14 @@ const PacienteService = (() => {
 
     ClinicaData.pacientes.push(nuevoPaciente);
 
-    registrarEnPostman({
+      registrarEnPostman({
       dni: nuevoPaciente.dni,
-      nombres: nuevoPaciente.nombre,
-      apellidos: nuevoPaciente.apellido,
-      fecha_nacimiento: nuevoPaciente.fechaNacimiento,
+      nombre: nuevoPaciente.nombre,
+      apellido: nuevoPaciente.apellido,
+      fecha_nac: nuevoPaciente.fechaNacimiento,
       telefono: nuevoPaciente.telefono,
-      correo: nuevoPaciente.email,
-      direccion: nuevoPaciente.direccion,
-      seguro: nuevoPaciente.seguro
+      email: nuevoPaciente.email,
+      direccion: nuevoPaciente.direccion
     });
 
     return { success: true, status: 201, paciente: nuevoPaciente };
